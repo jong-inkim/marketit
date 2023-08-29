@@ -6,9 +6,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@NoArgsConstructor
 public class Item {
 
     @Id
@@ -24,5 +26,9 @@ public class Item {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
+    }
+
+    public void decreaseQuantity(int quantity) {
+        this.quantity = this.quantity - quantity;
     }
 }

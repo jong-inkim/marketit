@@ -23,5 +23,11 @@ public class OrderItem {
     private int count;
     private int orderPrice;
 
+    public OrderItem(Item item, int count) {
+        this.item = item;
+        this.count = count;
+        this.orderPrice = item.getPrice();
+    }
+
 
 }

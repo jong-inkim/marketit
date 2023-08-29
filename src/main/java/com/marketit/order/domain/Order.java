@@ -16,10 +16,20 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
 
     private OrderStatus orderStatus;
 
     private LocalDateTime orderAt;
+
+    public Order(List<OrderItem> orderItems) {
+        this.orderStatus = OrderStatus.RECEIPT;
+        this.orderAt = LocalDateTime.now();
+        this.orderItems = orderItems;
+    }
+
+    public void completeOrder() {
+        this.orderStatus = OrderStatus.COMPLETE;
+    }
 }
