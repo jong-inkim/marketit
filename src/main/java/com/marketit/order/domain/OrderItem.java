@@ -2,9 +2,12 @@ package com.marketit.order.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Getter
+@NoArgsConstructor
 public class OrderItem {
 
     @Id
@@ -17,7 +20,7 @@ public class OrderItem {
     private Item item;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name =  "orders_id")
+    @JoinColumn(name =  "order_id")
     private Order order;
 
     private int count;
@@ -29,5 +32,7 @@ public class OrderItem {
         this.orderPrice = item.getPrice();
     }
 
-
+    public void setOrder(Order order) {
+        this.order = order;
+    }
 }

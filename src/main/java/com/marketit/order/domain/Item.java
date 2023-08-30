@@ -1,20 +1,21 @@
 package com.marketit.order.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.marketit.order.exception.NotEnoughStockException;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Getter
 @NoArgsConstructor
+@BatchSize(size = 100)
 public class Item {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "item_id")
     private Long id;
     private String name;
     private int price;
@@ -28,7 +29,10 @@ public class Item {
         this.quantity = quantity;
     }
 
-    public void decreaseQuantity(int quantity) {
+    public void decreaseQuantity(int quantity) throws NotEnoughStockException {
+        if (this.quantity - quantity < 0) {
+            throw new NotEnoughStockException(this.name + "의 재고가 부족합니다.");
+        }
         this.quantity = this.quantity - quantity;
     }
 }

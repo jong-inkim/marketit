@@ -4,24 +4,29 @@ import com.marketit.order.domain.Item;
 import com.marketit.order.domain.Order;
 import com.marketit.order.domain.OrderStatus;
 import com.marketit.order.dto.OrderRequestDto;
+import com.marketit.order.dto.OrderResponseDto;
+import com.marketit.order.exception.NotEnoughStockException;
 import com.marketit.order.repository.ItemRepository;
 import com.marketit.order.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Slf4j
 @SpringBootTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrderServiceImplTest {
 
     @Autowired
@@ -33,7 +38,7 @@ class OrderServiceImplTest {
 
     private Long orderId = 0L;
 
-    @BeforeEach
+    @BeforeAll
     void regist_test_item() {
         Random r = new Random();
 
@@ -49,9 +54,9 @@ class OrderServiceImplTest {
         }
         itemRepository.saveAll(items);
 
-        OrderRequestDto.ListDto dtos = new OrderRequestDto.ListDto();
-        dtos.getOrderRequestDtos().add(new OrderRequestDto(1L, 10));
-        dtos.getOrderRequestDtos().add(new OrderRequestDto(2L, 12));
+        List<OrderRequestDto> dtos = new ArrayList<>();
+        dtos.add(new OrderRequestDto(1L, 10));
+        dtos.add(new OrderRequestDto(2L, 12));
         orderId = orderService.receiveOrder(dtos);
     }
 
@@ -65,13 +70,14 @@ class OrderServiceImplTest {
 
     @Test
     @Transactional
+    @Rollback(value = false)
     void receive_order() {
         //given
-        OrderRequestDto.ListDto dtos = new OrderRequestDto.ListDto();
-        dtos.getOrderRequestDtos().add(new OrderRequestDto(1L, 10));
-        dtos.getOrderRequestDtos().add(new OrderRequestDto(2L, 12));
-        dtos.getOrderRequestDtos().add(new OrderRequestDto(3L, 5));
-        dtos.getOrderRequestDtos().add(new OrderRequestDto(4L, 3));
+        List<OrderRequestDto> dtos = new ArrayList<>();
+        dtos.add(new OrderRequestDto(1L, 10));
+        dtos.add(new OrderRequestDto(2L, 12));
+        dtos.add(new OrderRequestDto(3L, 5));
+        dtos.add(new OrderRequestDto(4L, 3));
 
         //when
         Long orderId = orderService.receiveOrder(dtos);
@@ -83,10 +89,37 @@ class OrderServiceImplTest {
 
     @Test
     @Transactional
-    void complete_order() {
-        orderService.completeOrder(orderId);
+    void receive_order_not_enough_quantity() {
+        //given
+        List<OrderRequestDto> dtos = new ArrayList<>();
+        dtos.add(new OrderRequestDto(1L, 200));
 
+        //when
+        assertThatThrownBy(() -> orderService.receiveOrder(dtos)).isInstanceOf(NotEnoughStockException.class);
+    }
+
+    @Test
+    @Transactional
+    void complete_order() {
+        orderService.completeOrder(orderId);;
         Order findOrder = orderRepository.findById(orderId).get();
         assertThat(findOrder.getOrderStatus()).isEqualTo(OrderStatus.COMPLETE);
+    }
+
+    @Test
+    @Transactional
+    void find_order() {
+        OrderResponseDto responseDto = orderService.findByOrderId(orderId);
+        log.info("responseDto.getId() = {}", responseDto.getId());
+        log.info("responseDto.getOrderStatus() = {}", responseDto.getOrderStatus());
+        log.info("responseDto.getOrderAt() = {}", responseDto.getOrderAt());
+        responseDto.getOrderItemResponseDtos().forEach(dto -> {
+            log.info("responseDto.getOrderItemResponseDtos().getItemId() = {}", dto.getItemId() );
+            log.info("responseDto.getOrderItemResponseDtos().getCount() = {}", dto.getCount() );
+            log.info("responseDto.getOrderItemResponseDtos().getName() = {}", dto.getName() );
+        });
+
+        Order order = orderRepository.findById(2L).get();
+        log.info("order = {} ", order.getOrderStatus());
     }
 }
