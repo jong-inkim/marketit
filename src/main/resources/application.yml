@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: marketit
+  profiles:
+    active: local
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: true
+  datasource:
+    url: jdbc:h2:mem:~/marketit
+    driverClassName: org.h2.Driver
+    username: sa
+
+logging:
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql: trace
