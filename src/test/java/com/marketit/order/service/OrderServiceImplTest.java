@@ -101,7 +101,7 @@ class OrderServiceImplTest {
     @Test
     @Transactional
     void complete_order() {
-        orderService.completeOrder(orderId);;
+        orderService.completeOrder(orderId);
         Order findOrder = orderRepository.findById(orderId).get();
         assertThat(findOrder.getOrderStatus()).isEqualTo(OrderStatus.COMPLETE);
     }
